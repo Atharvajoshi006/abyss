@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { SimulatorNavbar, type SimulatorTab } from '../components/simulator/SimulatorNavbar';
 import { OverviewTab } from '../components/simulator/OverviewTab';
 import { WalletsTab } from '../components/simulator/WalletsTab';
-import { IssueTab } from '../components/simulator/IssueTab';
-import { RedeemTab } from '../components/simulator/RedeemTab';
+import { CreditOperationsTab, type CreditOperationMode } from '../components/simulator/CreditOperationsTab';
 import { TransferTab } from '../components/simulator/TransferTab';
 import { FraudTab } from '../components/simulator/FraudTab';
 import { ActivityTab } from '../components/simulator/ActivityTab';
@@ -27,6 +26,7 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
   const [balances, setBalances] = useState<Balance[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [fraudAlerts, setFraudAlerts] = useState<FraudAlert[]>([]);
+  const [operationsMode, setOperationsMode] = useState<CreditOperationMode>('issue');
   const [loading, setLoading] = useState<boolean>(true);
 
   // Modals & Contextual Selection
@@ -85,13 +85,15 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
   // Handlers for switching tabs with contextual wallet selection
   const handleNavigateToIssue = (walletId?: string) => {
     if (walletId) setPreselectedWalletId(walletId);
-    setActiveTab('issue');
+    setOperationsMode('issue');
+    setActiveTab('operations');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavigateToRedeem = (walletId?: string) => {
     if (walletId) setPreselectedWalletId(walletId);
-    setActiveTab('redeem');
+    setOperationsMode('redeem');
+    setActiveTab('operations');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -161,21 +163,12 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
               />
             )}
 
-            {activeTab === 'issue' && (
-              <IssueTab
+            {activeTab === 'operations' && (
+              <CreditOperationsTab
                 wallets={wallets}
                 balances={balances}
                 preselectedWalletId={preselectedWalletId}
-                onOpenCreateWallet={() => setCreateModalOpen(true)}
-                onTransactionSuccess={handleTransactionSuccess}
-              />
-            )}
-
-            {activeTab === 'redeem' && (
-              <RedeemTab
-                wallets={wallets}
-                balances={balances}
-                preselectedWalletId={preselectedWalletId}
+                initialMode={operationsMode}
                 onOpenCreateWallet={() => setCreateModalOpen(true)}
                 onTransactionSuccess={handleTransactionSuccess}
               />
@@ -191,19 +184,19 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
               />
             )}
 
-            {activeTab === 'fraud' && (
-              <FraudTab
-                alerts={fraudAlerts}
-                wallets={wallets}
-                transactions={transactions}
-              />
-            )}
-
             {activeTab === 'activity' && (
               <ActivityTab
                 transactions={transactions}
                 wallets={wallets}
                 onNavigateToIssue={() => handleNavigateToIssue()}
+              />
+            )}
+
+            {activeTab === 'fraud' && (
+              <FraudTab
+                alerts={fraudAlerts}
+                wallets={wallets}
+                transactions={transactions}
               />
             )}
           </>

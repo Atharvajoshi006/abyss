@@ -3,16 +3,24 @@ import {
   ArrowLeft,
   LayoutDashboard,
   Users,
-  ArrowDownLeft,
-  ArrowUpRight,
+  Coins,
   ArrowLeftRight,
   History,
   PlusCircle,
   Database,
   ShieldAlert,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
+import { useConnectivity } from '../../utils/connectivity';
 
-export type SimulatorTab = 'overview' | 'wallets' | 'issue' | 'redeem' | 'transfer' | 'fraud' | 'activity';
+export type SimulatorTab =
+  | 'overview'
+  | 'wallets'
+  | 'operations'
+  | 'transfer'
+  | 'activity'
+  | 'fraud';
 
 interface SimulatorNavbarProps {
   activeTab: SimulatorTab;
@@ -31,18 +39,19 @@ export const SimulatorNavbar: React.FC<SimulatorNavbarProps> = ({
   walletCount,
   alertCount = 0,
 }) => {
+  const connectivity = useConnectivity();
+
   const tabs: { id: SimulatorTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { id: 'overview', label: 'Overview & Analytics', icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: 'wallets', label: `My Wallets (${walletCount})`, icon: <Users className="w-4 h-4" /> },
-    { id: 'issue', label: 'Issue Credits', icon: <ArrowDownLeft className="w-4 h-4" /> },
-    { id: 'redeem', label: 'Redeem Credits', icon: <ArrowUpRight className="w-4 h-4" /> },
-    { id: 'transfer', label: 'Transfer', icon: <ArrowLeftRight className="w-4 h-4" /> },
+    { id: 'operations', label: 'Credit Operations', icon: <Coins className="w-4 h-4" /> },
+    { id: 'transfer', label: 'Transfers & Exchange', icon: <ArrowLeftRight className="w-4 h-4" /> },
+    { id: 'activity', label: 'Activity & Export', icon: <History className="w-4 h-4" /> },
     {
       id: 'fraud',
-      label: alertCount > 0 ? `Fraud Engine (${alertCount})` : 'Fraud Engine',
+      label: alertCount > 0 ? `Fraud Monitoring (${alertCount})` : 'Fraud Monitoring',
       icon: <ShieldAlert className={`w-4 h-4 ${alertCount > 0 ? 'text-amber-400' : ''}`} />,
     },
-    { id: 'activity', label: 'Activity', icon: <History className="w-4 h-4" /> },
   ];
 
   return (
@@ -75,11 +84,23 @@ export const SimulatorNavbar: React.FC<SimulatorNavbarProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Connectivity Status Indicator */}
+            <div
+              className={`flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-full border shadow-2xs ${connectivity.colorClass}`}
+              title={`Network & Cache: ${connectivity.label}`}
+            >
+              {connectivity.isOnline ? (
+                <Wifi className="w-3 h-3 text-emerald-600" />
+              ) : (
+                <WifiOff className="w-3 h-3 text-rose-600" />
+              )}
+              <span className="font-semibold">{connectivity.label}</span>
+            </div>
+
             {/* IndexedDB status badge */}
-            <div className="hidden md:flex items-center gap-1.5 text-[11px] font-mono text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <Database className="w-3 h-3 text-emerald-600" />
+            <div className="hidden lg:flex items-center gap-1.5 text-[11px] font-mono text-stone-700 bg-stone-100 px-2.5 py-1 rounded-full border border-stone-200">
+              <Database className="w-3 h-3 text-stone-600" />
               <span>IndexedDB Active</span>
             </div>
 

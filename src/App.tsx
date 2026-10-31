@@ -46,7 +46,7 @@ export const App: React.FC = () => {
   };
 
   // Route to the functional wallet simulator at /app
-  if (currentPath === '/app') {
+  if (currentPath === '/app' || currentPath.startsWith('/app/')) {
     return <SimulatorPage onNavigateHome={() => navigateTo('/')} />;
   }
 
