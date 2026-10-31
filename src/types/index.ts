@@ -38,3 +38,7 @@ export interface FraudRule {
   type: 'threshold' | 'velocity';
   severity: 'high' | 'medium';
 }
+
+export * from './wallet';
+export * from './transaction';
+

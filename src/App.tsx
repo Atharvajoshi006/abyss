@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './sections/Hero';
 import { CurrencySection } from './sections/CurrencySection';
@@ -10,27 +10,56 @@ import { FeaturesSection } from './sections/FeaturesSection';
 import { FinalCTA } from './sections/FinalCTA';
 import { Footer } from './components/Footer';
 import { InteractiveSimulatorModal } from './components/InteractiveSimulatorModal';
+import { SimulatorPage } from './pages/SimulatorPage';
+
+const getNormalizedPath = (): string => {
+  if (typeof window === 'undefined') return '/';
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  return path;
+};
 
 export const App: React.FC = () => {
+  const [currentPath, setCurrentPath] = useState<string>(getNormalizedPath());
   const [simulatorOpen, setSimulatorOpen] = useState(false);
 
-  const handleOpenSimulator = () => {
-    setSimulatorOpen(true);
+  // Sync state with browser back / forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(getNormalizedPath());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState(null, '', path);
+    setCurrentPath(getNormalizedPath());
+    window.scrollTo(0, 0);
   };
 
-  const handleCloseSimulator = () => {
+  const handleLaunchSimulator = () => {
+    navigateTo('/app');
+  };
+
+  const handleCloseModal = () => {
     setSimulatorOpen(false);
   };
 
+  // Route to the functional wallet simulator at /app
+  if (currentPath === '/app') {
+    return <SimulatorPage onNavigateHome={() => navigateTo('/')} />;
+  }
+
+  // Route to marketing landing page at /
   return (
     <div className="min-h-screen bg-[#faf8f5] text-[#121316] flex flex-col selection:bg-stone-900 selection:text-white">
       {/* Top Navbar */}
-      <Navbar onLaunchSimulator={handleOpenSimulator} />
+      <Navbar onLaunchSimulator={handleLaunchSimulator} />
 
       {/* Main Sections in Explicit Order */}
       <main className="flex-1">
         {/* SECTION 01 — HERO */}
-        <Hero onExplore={handleOpenSimulator} />
+        <Hero onExplore={handleLaunchSimulator} />
 
         {/* SECTION 02 — MULTI-CURRENCY EXPERIENCE */}
         <CurrencySection />
@@ -51,14 +80,14 @@ export const App: React.FC = () => {
         <FeaturesSection />
 
         {/* SECTION 08 — FINAL CTA (Deep Forest-Green Cutting Mat) */}
-        <FinalCTA onLaunch={handleOpenSimulator} />
+        <FinalCTA onLaunch={handleLaunchSimulator} />
       </main>
 
       {/* SECTION 09 — FOOTER */}
-      <Footer onLaunchSimulator={handleOpenSimulator} />
+      <Footer onLaunchSimulator={handleLaunchSimulator} />
 
-      {/* Interactive Simulator Sandbox Modal */}
-      <InteractiveSimulatorModal isOpen={simulatorOpen} onClose={handleCloseSimulator} />
+      {/* Interactive Simulator Sandbox Modal (Preserved for compatibility) */}
+      <InteractiveSimulatorModal isOpen={simulatorOpen} onClose={handleCloseModal} />
     </div>
   );
 };
