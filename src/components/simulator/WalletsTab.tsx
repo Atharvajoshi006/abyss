@@ -8,6 +8,7 @@ import {
   ExternalLink,
   ArrowDownLeft,
   ArrowUpRight,
+  ArrowLeftRight,
 } from 'lucide-react';
 import type { Wallet, Balance } from '../../types/wallet';
 import { formatMinorUnits, SUPPORTED_CURRENCIES } from '../../utils/currency';
@@ -19,6 +20,7 @@ interface WalletsTabProps {
   onSelectWallet: (wallet: Wallet) => void;
   onNavigateToIssue: (walletId: string) => void;
   onNavigateToRedeem: (walletId: string) => void;
+  onNavigateToTransfer?: (walletId: string) => void;
 }
 
 export const WalletsTab: React.FC<WalletsTabProps> = ({
@@ -28,6 +30,7 @@ export const WalletsTab: React.FC<WalletsTabProps> = ({
   onSelectWallet,
   onNavigateToIssue,
   onNavigateToRedeem,
+  onNavigateToTransfer,
 }) => {
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -212,6 +215,19 @@ export const WalletsTab: React.FC<WalletsTabProps> = ({
                       <ArrowUpRight className="w-3 h-3 text-stone-600" />
                       <span>Redeem</span>
                     </button>
+                    {onNavigateToTransfer && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigateToTransfer(wallet.id);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-[11px] font-semibold border border-indigo-200/60 flex items-center gap-1 transition-colors"
+                        title="Transfer credits from this wallet"
+                      >
+                        <ArrowLeftRight className="w-3 h-3 text-indigo-600" />
+                        <span>Transfer</span>
+                      </button>
+                    )}
                   </div>
 
                   <span className="text-[11px] font-semibold text-stone-400 group-hover:text-stone-900 flex items-center gap-1 transition-colors">

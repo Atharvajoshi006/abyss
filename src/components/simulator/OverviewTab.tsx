@@ -4,6 +4,7 @@ import {
   Layers,
   ArrowDownLeft,
   ArrowUpRight,
+  ArrowLeftRight,
   PlusCircle,
   Database,
   ArrowRight,
@@ -18,7 +19,7 @@ interface OverviewTabProps {
   balances: Balance[];
   transactions: Transaction[];
   onOpenCreateWallet: () => void;
-  onNavigateToTab: (tab: 'wallets' | 'issue' | 'redeem' | 'activity') => void;
+  onNavigateToTab: (tab: 'wallets' | 'issue' | 'redeem' | 'transfer' | 'activity') => void;
   onSelectWallet: (wallet: Wallet) => void;
 }
 
@@ -324,8 +325,25 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           ) : (
             <div className="divide-y divide-stone-100 overflow-hidden">
               {recentTransactions.map((tx) => {
-                const wallet = walletMap.get(tx.walletId);
-                const usernameDisplay = wallet ? `@${wallet.username}` : tx.walletId.slice(0, 8);
+                const isIssue = tx.type === 'ISSUE';
+                const isRedeem = tx.type === 'REDEEM';
+                const isTransfer = tx.type === 'TRANSFER';
+
+                let usernameDisplay: React.ReactNode;
+                if (isTransfer) {
+                  const sender = walletMap.get(tx.senderWalletId || tx.walletId);
+                  const recipient = walletMap.get(tx.recipientWalletId || '');
+                  usernameDisplay = (
+                    <span className="text-stone-700">
+                      {sender ? `@${sender.username}` : 'Sender'} → {recipient ? `@${recipient.username}` : 'Recipient'}
+                    </span>
+                  );
+                } else {
+                  const wallet = walletMap.get(tx.walletId);
+                  usernameDisplay = (
+                    <span className="text-stone-700">{wallet ? `@${wallet.username}` : tx.walletId.slice(0, 8)}</span>
+                  );
+                }
 
                 return (
                   <div
@@ -335,29 +353,35 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     <div className="flex items-center gap-2.5">
                       <div
                         className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                          tx.type === 'ISSUE'
+                          isIssue
                             ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
+                            : isRedeem
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-indigo-100 text-indigo-800'
                         }`}
                       >
-                        {tx.type === 'ISSUE' ? (
+                        {isIssue ? (
                           <ArrowDownLeft className="w-3.5 h-3.5" />
-                        ) : (
+                        ) : isRedeem ? (
                           <ArrowUpRight className="w-3.5 h-3.5" />
+                        ) : (
+                          <ArrowLeftRight className="w-3.5 h-3.5" />
                         )}
                       </div>
                       <div>
                         <div className="font-semibold text-xs text-stone-900 flex items-center gap-1.5">
                           <span
                             className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${
-                              tx.type === 'ISSUE'
+                              isIssue
                                 ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-amber-100 text-amber-800'
+                                : isRedeem
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-indigo-100 text-indigo-800'
                             }`}
                           >
                             {tx.type}
                           </span>
-                          <span className="text-stone-700">{usernameDisplay}</span>
+                          {usernameDisplay}
                         </div>
                         <div className="text-[10px] text-stone-400 font-mono">
                           {new Date(tx.createdAt).toLocaleTimeString([], {
@@ -371,10 +395,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     <div className="text-right">
                       <div
                         className={`font-mono font-bold text-xs ${
-                          tx.type === 'ISSUE' ? 'text-emerald-700' : 'text-stone-900'
+                          isIssue
+                            ? 'text-emerald-700'
+                            : isRedeem
+                            ? 'text-stone-900'
+                            : 'text-indigo-700'
                         }`}
                       >
-                        {tx.type === 'ISSUE' ? '+' : '-'} {formatMinorUnits(tx.amountMinor, tx.currency)}
+                        {isIssue ? '+' : isRedeem ? '-' : '↔'} {formatMinorUnits(tx.amountMinor, tx.currency)}
                       </div>
                       <div className="text-[10px] text-stone-400 font-mono">
                         bal: {formatMinorUnits(tx.balanceAfterMinor, tx.currency)}

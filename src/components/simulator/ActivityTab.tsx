@@ -6,6 +6,7 @@ import {
   Check,
   ArrowDownLeft,
   ArrowUpRight,
+  ArrowLeftRight,
 } from 'lucide-react';
 import type { Wallet } from '../../types/wallet';
 import type { Transaction } from '../../types/transaction';
@@ -37,7 +38,11 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
   wallets.forEach((w) => walletMap.set(w.id, w));
 
   const filtered = transactions.filter((tx) => {
-    if (selectedWalletId !== 'ALL' && tx.walletId !== selectedWalletId) return false;
+    if (selectedWalletId !== 'ALL') {
+      const isSender = tx.senderWalletId === selectedWalletId || tx.walletId === selectedWalletId;
+      const isRecipient = tx.recipientWalletId === selectedWalletId;
+      if (!isSender && !isRecipient) return false;
+    }
     if (selectedType !== 'ALL' && tx.type !== selectedType) return false;
     if (selectedCurrency !== 'ALL' && tx.currency !== selectedCurrency) return false;
     return true;
@@ -76,6 +81,7 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
             <option value="ALL">All Types</option>
             <option value="ISSUE">ISSUE (Credit)</option>
             <option value="REDEEM">REDEEM (Debit)</option>
+            <option value="TRANSFER">TRANSFER (P2P)</option>
           </select>
 
           {/* Currency Filter */}
@@ -105,7 +111,7 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
           <h3 className="text-sm font-bold text-stone-800">No Operations Found</h3>
           <p className="text-xs text-stone-500 max-w-sm mx-auto mt-1 mb-5">
             {transactions.length === 0
-              ? 'No credit issuance or redemption transactions have been executed yet.'
+              ? 'No credit issuance, redemption, or transfer transactions have been executed yet.'
               : 'No transactions matched the selected filter criteria.'}
           </p>
           {transactions.length === 0 && (
@@ -126,7 +132,7 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
                 <tr className="bg-stone-50/80 border-b border-stone-200/80 text-[11px] font-bold text-stone-600 uppercase tracking-wider">
                   <th className="py-3.5 px-4">Transaction ID</th>
                   <th className="py-3.5 px-4">Timestamp</th>
-                  <th className="py-3.5 px-4">Wallet</th>
+                  <th className="py-3.5 px-4">Entity / Participants</th>
                   <th className="py-3.5 px-4">Operation</th>
                   <th className="py-3.5 px-4 text-right">Amount</th>
                   <th className="py-3.5 px-4">Currency</th>
@@ -136,9 +142,78 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
               </thead>
               <tbody className="divide-y divide-stone-100 font-mono">
                 {filtered.map((tx) => {
-                  const wallet = walletMap.get(tx.walletId);
-                  const username = wallet ? `@${wallet.username}` : tx.walletId.slice(0, 10);
                   const isIssue = tx.type === 'ISSUE';
+                  const isRedeem = tx.type === 'REDEEM';
+                  const isTransfer = tx.type === 'TRANSFER';
+
+                  let participantDisplay: React.ReactNode;
+                  if (isTransfer) {
+                    const sender = walletMap.get(tx.senderWalletId || tx.walletId);
+                    const recipient = walletMap.get(tx.recipientWalletId || '');
+                    participantDisplay = (
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-stone-900">
+                          {sender ? `@${sender.username}` : (tx.senderWalletId || tx.walletId).slice(0, 8)}
+                        </span>
+                        <span className="text-stone-400">→</span>
+                        <span className="font-semibold text-stone-900">
+                          {recipient ? `@${recipient.username}` : (tx.recipientWalletId || '').slice(0, 8)}
+                        </span>
+                      </div>
+                    );
+                  } else {
+                    const wallet = walletMap.get(tx.walletId);
+                    participantDisplay = (
+                      <span className="font-semibold text-stone-900">
+                        {wallet ? `@${wallet.username}` : tx.walletId.slice(0, 10)}
+                      </span>
+                    );
+                  }
+
+                  let typeBadge: React.ReactNode;
+                  if (isIssue) {
+                    typeBadge = (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/60">
+                        <ArrowDownLeft className="w-3 h-3 text-emerald-700" />
+                        <span>ISSUE</span>
+                      </span>
+                    );
+                  } else if (isRedeem) {
+                    typeBadge = (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200/60">
+                        <ArrowUpRight className="w-3 h-3 text-amber-700" />
+                        <span>REDEEM</span>
+                      </span>
+                    );
+                  } else {
+                    typeBadge = (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200/60">
+                        <ArrowLeftRight className="w-3 h-3 text-indigo-700" />
+                        <span>TRANSFER</span>
+                      </span>
+                    );
+                  }
+
+                  let balanceAfterDisplay: React.ReactNode;
+                  if (isTransfer) {
+                    balanceAfterDisplay = (
+                      <div className="text-right text-[11px]">
+                        <span className="text-stone-700">
+                          S: {formatMinorUnits(tx.senderBalanceAfterMinor ?? tx.balanceAfterMinor, tx.currency)}
+                        </span>
+                        <br />
+                        <span className="text-emerald-700">
+                          R: {formatMinorUnits(tx.recipientBalanceAfterMinor ?? 0, tx.currency)}
+                        </span>
+                      </div>
+                    );
+                  } else {
+                    balanceAfterDisplay = (
+                      <span className="font-bold text-stone-800">
+                        {formatMinorUnits(tx.balanceAfterMinor, tx.currency)}
+                      </span>
+                    );
+                  }
 
                   return (
                     <tr key={tx.id} className="hover:bg-stone-50/60 transition-colors">
@@ -165,37 +240,25 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
                         {new Date(tx.createdAt).toLocaleString()}
                       </td>
 
-                      {/* Wallet */}
-                      <td className="py-3 px-4">
-                        <span className="font-semibold text-stone-900">{username}</span>
-                      </td>
+                      {/* Entity / Participants */}
+                      <td className="py-3 px-4">{participantDisplay}</td>
 
                       {/* Operation Type */}
-                      <td className="py-3 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            isIssue
-                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200/60'
-                              : 'bg-amber-100 text-amber-900 border border-amber-200/60'
-                          }`}
-                        >
-                          {isIssue ? (
-                            <ArrowDownLeft className="w-3 h-3 text-emerald-700" />
-                          ) : (
-                            <ArrowUpRight className="w-3 h-3 text-amber-700" />
-                          )}
-                          <span>{tx.type}</span>
-                        </span>
-                      </td>
+                      <td className="py-3 px-4">{typeBadge}</td>
 
                       {/* Amount */}
                       <td className="py-3 px-4 text-right">
                         <span
                           className={`font-bold ${
-                            isIssue ? 'text-emerald-700' : 'text-stone-900'
+                            isIssue
+                              ? 'text-emerald-700'
+                              : isRedeem
+                              ? 'text-stone-900'
+                              : 'text-indigo-700'
                           }`}
                         >
-                          {isIssue ? '+' : '-'} {formatMinorUnits(tx.amountMinor, tx.currency)}
+                          {isIssue ? '+' : isRedeem ? '-' : '↔'}{' '}
+                          {formatMinorUnits(tx.amountMinor, tx.currency)}
                         </span>
                       </td>
 
@@ -207,9 +270,7 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
                       </td>
 
                       {/* Balance After */}
-                      <td className="py-3 px-4 text-right font-bold text-stone-800">
-                        {formatMinorUnits(tx.balanceAfterMinor, tx.currency)}
-                      </td>
+                      <td className="py-3 px-4 text-right">{balanceAfterDisplay}</td>
 
                       {/* Idempotency Key */}
                       <td className="py-3 px-4 text-[10px] text-stone-400">

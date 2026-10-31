@@ -5,12 +5,13 @@ import {
   Users,
   ArrowDownLeft,
   ArrowUpRight,
+  ArrowLeftRight,
   History,
   PlusCircle,
   Database,
 } from 'lucide-react';
 
-export type SimulatorTab = 'overview' | 'wallets' | 'issue' | 'redeem' | 'activity';
+export type SimulatorTab = 'overview' | 'wallets' | 'issue' | 'redeem' | 'transfer' | 'activity';
 
 interface SimulatorNavbarProps {
   activeTab: SimulatorTab;
@@ -32,6 +33,7 @@ export const SimulatorNavbar: React.FC<SimulatorNavbarProps> = ({
     { id: 'wallets', label: `My Wallets (${walletCount})`, icon: <Users className="w-4 h-4" /> },
     { id: 'issue', label: 'Issue Credits', icon: <ArrowDownLeft className="w-4 h-4" /> },
     { id: 'redeem', label: 'Redeem Credits', icon: <ArrowUpRight className="w-4 h-4" /> },
+    { id: 'transfer', label: 'Transfer', icon: <ArrowLeftRight className="w-4 h-4" /> },
     { id: 'activity', label: 'Activity', icon: <History className="w-4 h-4" /> },
   ];
 

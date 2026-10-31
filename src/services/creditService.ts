@@ -196,10 +196,15 @@ export async function getAllBalances(): Promise<Balance[]> {
  */
 export async function getTransactions(walletId?: string): Promise<Transaction[]> {
   if (walletId) {
-    const txs = await db.transactions.where('walletId').equals(walletId).toArray();
+    const txs = await db.transactions
+      .filter((tx) => tx.walletId === walletId || tx.senderWalletId === walletId || tx.recipientWalletId === walletId)
+      .toArray();
     return txs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   const txs = await db.transactions.toArray();
   return txs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
+
+export * from './transferService';
+

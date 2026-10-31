@@ -10,12 +10,17 @@ export class TimeWalletDatabase extends Dexie {
   constructor() {
     super('TimeWalletDB');
 
-    // Version 1 of the schema
-    // Future migrations can declare this.version(2)... without deleting existing tables
+    // Version 1 of the schema (Phase 1)
     this.version(1).stores({
       wallets: 'id, &usernameKey, createdAt',
       balances: '[walletId+currency], walletId, currency, updatedAt',
       transactions: 'id, &idempotencyKey, walletId, type, currency, createdAt',
+    });
+
+    // Version 2 of the schema (Phase 2: Wallet-to-Wallet Transfers)
+    // Preserves all existing tables and data; safely adds senderWalletId and recipientWalletId indexes
+    this.version(2).stores({
+      transactions: 'id, &idempotencyKey, walletId, senderWalletId, recipientWalletId, type, currency, createdAt',
     });
   }
 }

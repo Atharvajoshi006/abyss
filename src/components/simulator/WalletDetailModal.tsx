@@ -9,6 +9,7 @@ import {
   MinusCircle,
   ArrowDownLeft,
   ArrowUpRight,
+  ArrowLeftRight,
 } from 'lucide-react';
 import type { Wallet, Balance } from '../../types/wallet';
 import type { Transaction } from '../../types/transaction';
@@ -22,6 +23,7 @@ interface WalletDetailModalProps {
   onClose: () => void;
   onNavigateToIssue: (walletId: string) => void;
   onNavigateToRedeem: (walletId: string) => void;
+  onNavigateToTransfer?: (walletId: string) => void;
 }
 
 export const WalletDetailModal: React.FC<WalletDetailModalProps> = ({
@@ -32,6 +34,7 @@ export const WalletDetailModal: React.FC<WalletDetailModalProps> = ({
   onClose,
   onNavigateToIssue,
   onNavigateToRedeem,
+  onNavigateToTransfer,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -119,6 +122,18 @@ export const WalletDetailModal: React.FC<WalletDetailModalProps> = ({
                 <MinusCircle className="w-3.5 h-3.5" />
                 <span>Redeem Credits</span>
               </button>
+              {onNavigateToTransfer && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onNavigateToTransfer(wallet.id);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-2xs transition-colors"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                  <span>Transfer Credits</span>
+                </button>
+              )}
             </div>
           </div>
 

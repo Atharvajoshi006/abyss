@@ -4,6 +4,7 @@ import { OverviewTab } from '../components/simulator/OverviewTab';
 import { WalletsTab } from '../components/simulator/WalletsTab';
 import { IssueTab } from '../components/simulator/IssueTab';
 import { RedeemTab } from '../components/simulator/RedeemTab';
+import { TransferTab } from '../components/simulator/TransferTab';
 import { ActivityTab } from '../components/simulator/ActivityTab';
 import { CreateWalletModal } from '../components/simulator/CreateWalletModal';
 import { WalletDetailModal } from '../components/simulator/WalletDetailModal';
@@ -86,6 +87,12 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleNavigateToTransfer = (walletId?: string) => {
+    if (walletId) setPreselectedWalletId(walletId);
+    setActiveTab('transfer');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleWalletCreated = (newWallet: Wallet) => {
     refreshData();
     // Default preselect newly created wallet for immediate operations
@@ -141,6 +148,7 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
                 onSelectWallet={(wallet) => setSelectedWalletForDetail(wallet)}
                 onNavigateToIssue={handleNavigateToIssue}
                 onNavigateToRedeem={handleNavigateToRedeem}
+                onNavigateToTransfer={handleNavigateToTransfer}
               />
             )}
 
@@ -159,6 +167,16 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
                 wallets={wallets}
                 balances={balances}
                 preselectedWalletId={preselectedWalletId}
+                onOpenCreateWallet={() => setCreateModalOpen(true)}
+                onTransactionSuccess={handleTransactionSuccess}
+              />
+            )}
+
+            {activeTab === 'transfer' && (
+              <TransferTab
+                wallets={wallets}
+                balances={balances}
+                preselectedSenderId={preselectedWalletId}
                 onOpenCreateWallet={() => setCreateModalOpen(true)}
                 onTransactionSuccess={handleTransactionSuccess}
               />
@@ -191,6 +209,7 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
         onClose={() => setSelectedWalletForDetail(null)}
         onNavigateToIssue={handleNavigateToIssue}
         onNavigateToRedeem={handleNavigateToRedeem}
+        onNavigateToTransfer={handleNavigateToTransfer}
       />
     </div>
   );
