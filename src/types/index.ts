@@ -41,4 +41,6 @@ export interface FraudRule {
 
 export * from './wallet';
 export * from './transaction';
+export * from './exchange';
+export * from './fraud';
 

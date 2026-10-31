@@ -196,14 +196,16 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
 
                   let balanceAfterDisplay: React.ReactNode;
                   if (isTransfer) {
+                    const srcCurr = tx.sourceCurrency ?? tx.currency;
+                    const destCurr = tx.destinationCurrency ?? tx.currency;
                     balanceAfterDisplay = (
                       <div className="text-right text-[11px]">
                         <span className="text-stone-700">
-                          S: {formatMinorUnits(tx.senderBalanceAfterMinor ?? tx.balanceAfterMinor, tx.currency)}
+                          S: {formatMinorUnits(tx.senderBalanceAfterMinor ?? tx.balanceAfterMinor, srcCurr)}
                         </span>
                         <br />
                         <span className="text-emerald-700">
-                          R: {formatMinorUnits(tx.recipientBalanceAfterMinor ?? 0, tx.currency)}
+                          R: {formatMinorUnits(tx.recipientBalanceAfterMinor ?? 0, destCurr)}
                         </span>
                       </div>
                     );
@@ -214,6 +216,11 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
                       </span>
                     );
                   }
+
+                  const isCrossCurrency =
+                    isTransfer &&
+                    !!tx.destinationCurrency &&
+                    tx.destinationCurrency !== (tx.sourceCurrency ?? tx.currency);
 
                   return (
                     <tr key={tx.id} className="hover:bg-stone-50/60 transition-colors">
@@ -243,30 +250,63 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
                       {/* Entity / Participants */}
                       <td className="py-3 px-4">{participantDisplay}</td>
 
-                      {/* Operation Type */}
-                      <td className="py-3 px-4">{typeBadge}</td>
+                      {/* Operation Type & Fraud Flag */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {typeBadge}
+                          {tx.isFlagged && (
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300"
+                              title={tx.flagReasons?.join('; ') || 'Flagged by fraud engine'}
+                            >
+                              ⚠️ Flagged
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
                       {/* Amount */}
                       <td className="py-3 px-4 text-right">
-                        <span
-                          className={`font-bold ${
-                            isIssue
-                              ? 'text-emerald-700'
-                              : isRedeem
-                              ? 'text-stone-900'
-                              : 'text-indigo-700'
-                          }`}
-                        >
-                          {isIssue ? '+' : isRedeem ? '-' : '↔'}{' '}
-                          {formatMinorUnits(tx.amountMinor, tx.currency)}
-                        </span>
+                        {isCrossCurrency ? (
+                          <div>
+                            <span className="font-bold text-indigo-700">
+                              {formatMinorUnits(tx.sourceAmountMinor ?? tx.amountMinor, tx.sourceCurrency ?? tx.currency)}
+                              {' → '}
+                              {formatMinorUnits(tx.destinationAmountMinor ?? tx.amountMinor, tx.destinationCurrency!)}
+                            </span>
+                            {tx.exchangeRate && (
+                              <div className="text-[10px] text-stone-400">
+                                1 {tx.sourceCurrency ?? tx.currency} = {tx.exchangeRate.toFixed(4)} {tx.destinationCurrency}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span
+                            className={`font-bold ${
+                              isIssue
+                                ? 'text-emerald-700'
+                                : isRedeem
+                                ? 'text-stone-900'
+                                : 'text-indigo-700'
+                            }`}
+                          >
+                            {isIssue ? '+' : isRedeem ? '-' : '↔'}{' '}
+                            {formatMinorUnits(tx.amountMinor, tx.currency)}
+                          </span>
+                        )}
                       </td>
 
                       {/* Currency */}
                       <td className="py-3 px-4">
-                        <span className="px-1.5 py-0.5 rounded-sm bg-stone-100 text-stone-700 font-semibold text-[10px]">
-                          {tx.currency}
-                        </span>
+                        {isCrossCurrency ? (
+                          <span className="px-1.5 py-0.5 rounded-sm bg-indigo-50 text-indigo-800 font-semibold text-[10px] border border-indigo-200">
+                            {tx.sourceCurrency ?? tx.currency} → {tx.destinationCurrency}
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded-sm bg-stone-100 text-stone-700 font-semibold text-[10px]">
+                            {tx.currency}
+                          </span>
+                        )}
                       </td>
 
                       {/* Balance After */}

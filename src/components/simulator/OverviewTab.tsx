@@ -19,7 +19,7 @@ interface OverviewTabProps {
   balances: Balance[];
   transactions: Transaction[];
   onOpenCreateWallet: () => void;
-  onNavigateToTab: (tab: 'wallets' | 'issue' | 'redeem' | 'transfer' | 'activity') => void;
+  onNavigateToTab: (tab: 'wallets' | 'issue' | 'redeem' | 'transfer' | 'fraud' | 'activity') => void;
   onSelectWallet: (wallet: Wallet) => void;
 }
 
@@ -381,6 +381,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                           >
                             {tx.type}
                           </span>
+                          {tx.isFlagged && (
+                            <span
+                              className="px-1 py-0.2 rounded-xs text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300"
+                              title="Flagged by fraud engine"
+                            >
+                              ⚠️
+                            </span>
+                          )}
                           {usernameDisplay}
                         </div>
                         <div className="text-[10px] text-stone-400 font-mono">
@@ -402,7 +410,15 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                             : 'text-indigo-700'
                         }`}
                       >
-                        {isIssue ? '+' : isRedeem ? '-' : '↔'} {formatMinorUnits(tx.amountMinor, tx.currency)}
+                        {isTransfer && tx.destinationCurrency && tx.destinationCurrency !== (tx.sourceCurrency ?? tx.currency) ? (
+                          <span>
+                            {formatMinorUnits(tx.sourceAmountMinor ?? tx.amountMinor, tx.sourceCurrency ?? tx.currency)} → {formatMinorUnits(tx.destinationAmountMinor ?? tx.amountMinor, tx.destinationCurrency)}
+                          </span>
+                        ) : (
+                          <span>
+                            {isIssue ? '+' : isRedeem ? '-' : '↔'} {formatMinorUnits(tx.amountMinor, tx.currency)}
+                          </span>
+                        )}
                       </div>
                       <div className="text-[10px] text-stone-400 font-mono">
                         bal: {formatMinorUnits(tx.balanceAfterMinor, tx.currency)}

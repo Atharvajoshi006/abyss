@@ -9,9 +9,10 @@ import {
   History,
   PlusCircle,
   Database,
+  ShieldAlert,
 } from 'lucide-react';
 
-export type SimulatorTab = 'overview' | 'wallets' | 'issue' | 'redeem' | 'transfer' | 'activity';
+export type SimulatorTab = 'overview' | 'wallets' | 'issue' | 'redeem' | 'transfer' | 'fraud' | 'activity';
 
 interface SimulatorNavbarProps {
   activeTab: SimulatorTab;
@@ -19,6 +20,7 @@ interface SimulatorNavbarProps {
   onNavigateHome: () => void;
   onOpenCreateWallet: () => void;
   walletCount: number;
+  alertCount?: number;
 }
 
 export const SimulatorNavbar: React.FC<SimulatorNavbarProps> = ({
@@ -27,6 +29,7 @@ export const SimulatorNavbar: React.FC<SimulatorNavbarProps> = ({
   onNavigateHome,
   onOpenCreateWallet,
   walletCount,
+  alertCount = 0,
 }) => {
   const tabs: { id: SimulatorTab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -34,6 +37,11 @@ export const SimulatorNavbar: React.FC<SimulatorNavbarProps> = ({
     { id: 'issue', label: 'Issue Credits', icon: <ArrowDownLeft className="w-4 h-4" /> },
     { id: 'redeem', label: 'Redeem Credits', icon: <ArrowUpRight className="w-4 h-4" /> },
     { id: 'transfer', label: 'Transfer', icon: <ArrowLeftRight className="w-4 h-4" /> },
+    {
+      id: 'fraud',
+      label: alertCount > 0 ? `Fraud Engine (${alertCount})` : 'Fraud Engine',
+      icon: <ShieldAlert className={`w-4 h-4 ${alertCount > 0 ? 'text-amber-400' : ''}`} />,
+    },
     { id: 'activity', label: 'Activity', icon: <History className="w-4 h-4" /> },
   ];
 

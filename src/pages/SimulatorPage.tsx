@@ -5,13 +5,16 @@ import { WalletsTab } from '../components/simulator/WalletsTab';
 import { IssueTab } from '../components/simulator/IssueTab';
 import { RedeemTab } from '../components/simulator/RedeemTab';
 import { TransferTab } from '../components/simulator/TransferTab';
+import { FraudTab } from '../components/simulator/FraudTab';
 import { ActivityTab } from '../components/simulator/ActivityTab';
 import { CreateWalletModal } from '../components/simulator/CreateWalletModal';
 import { WalletDetailModal } from '../components/simulator/WalletDetailModal';
 import { getWallets } from '../services/walletService';
 import { getAllBalances, getTransactions } from '../services/creditService';
+import { getFraudAlerts } from '../services/fraudEngine';
 import type { Wallet, Balance } from '../types/wallet';
 import type { Transaction } from '../types/transaction';
+import type { FraudAlert } from '../types/fraud';
 import { Loader2 } from 'lucide-react';
 
 interface SimulatorPageProps {
@@ -23,6 +26,7 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [balances, setBalances] = useState<Balance[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [fraudAlerts, setFraudAlerts] = useState<FraudAlert[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Modals & Contextual Selection
@@ -33,14 +37,16 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
   // Central refresh mechanism
   const refreshData = useCallback(async () => {
     try {
-      const [fetchedWallets, fetchedBalances, fetchedTransactions] = await Promise.all([
+      const [fetchedWallets, fetchedBalances, fetchedTransactions, fetchedAlerts] = await Promise.all([
         getWallets(),
         getAllBalances(),
         getTransactions(),
+        getFraudAlerts(),
       ]);
       setWallets(fetchedWallets);
       setBalances(fetchedBalances);
       setTransactions(fetchedTransactions);
+      setFraudAlerts(fetchedAlerts);
     } catch (err) {
       console.error('Error fetching data from IndexedDB:', err);
     } finally {
@@ -52,15 +58,17 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
     let ignore = false;
     void (async () => {
       try {
-        const [w, b, t] = await Promise.all([
+        const [w, b, t, a] = await Promise.all([
           getWallets(),
           getAllBalances(),
           getTransactions(),
+          getFraudAlerts(),
         ]);
         if (!ignore) {
           setWallets(w);
           setBalances(b);
           setTransactions(t);
+          setFraudAlerts(a);
           setLoading(false);
         }
       } catch (err) {
@@ -115,6 +123,7 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
         onNavigateHome={onNavigateHome}
         onOpenCreateWallet={() => setCreateModalOpen(true)}
         walletCount={wallets.length}
+        alertCount={fraudAlerts.length}
       />
 
       {/* Main Tab Content */}
@@ -179,6 +188,14 @@ export const SimulatorPage: React.FC<SimulatorPageProps> = ({ onNavigateHome }) 
                 preselectedSenderId={preselectedWalletId}
                 onOpenCreateWallet={() => setCreateModalOpen(true)}
                 onTransactionSuccess={handleTransactionSuccess}
+              />
+            )}
+
+            {activeTab === 'fraud' && (
+              <FraudTab
+                alerts={fraudAlerts}
+                wallets={wallets}
+                transactions={transactions}
               />
             )}
 
